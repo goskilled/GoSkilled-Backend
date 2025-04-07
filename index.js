@@ -22,7 +22,6 @@ app.use('/api/user', userRoutes); // Add this line
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
   res.status(500).json({
     success: false,
     message: 'Server Error',

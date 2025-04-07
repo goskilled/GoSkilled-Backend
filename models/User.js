@@ -86,29 +86,38 @@ const UserSchema = new mongoose.Schema({
   }
 });
 
-// Pre-save middleware to hash password
+// Pre-save middleware to hash password and generate referral code
 UserSchema.pre('save', async function(next) {
-  // Only hash the password if it's modified or new
   if (!this.isModified('password')) {
     return next();
   }
-  
+
   try {
-    // Generate salt
+    // Hash password
     const salt = await bcrypt.genSalt(10);
-    // Hash password with salt
     this.password = await bcrypt.hash(this.password, salt);
-    
-    // Generate unique referral code if not already set
+
+    // Generate unique referral code starting with "GS"
     if (!this.referralCode) {
-      this.referralCode = crypto.randomBytes(4).toString('hex').toUpperCase();
+      let isUnique = false;
+      let code;
+      const User = mongoose.model('User'); // Avoid circular dependency
+
+      while (!isUnique) {
+        code = 'GS' + crypto.randomBytes(3).toString('hex').toUpperCase(); // GS + 6-char random hex
+        const existingUser = await User.findOne({ referralCode: code });
+        if (!existingUser) isUnique = true;
+      }
+
+      this.referralCode = code;
     }
-    
+
     next();
   } catch (error) {
     next(error);
   }
 });
+
 
 // Method to check if password matches
 UserSchema.methods.matchPassword = async function(enteredPassword) {
