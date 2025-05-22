@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes'); // Add this line
+const userRoutes = require('./routes/userRoutes');
 
 dotenv.config();
 
@@ -16,9 +16,13 @@ app.use(cors());
 // Connect to MongoDB
 require('./config/db');
 
+app.get('/', (req, res) => {
+  res.status(200).json("Live URL");
+});
+
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes); // Add this line
+app.use('/api/user', userRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
