@@ -20,7 +20,4 @@ router.post('/request-login-otp', requestLoginOTP);
 router.post('/login-with-otp', loginWithOTP);
 router.post('/resend-otp', resendOTP);
 
-// Protected routes
-router.get('/me', protect, getMe);
-
 module.exports = router;

@@ -36,6 +36,15 @@ const UserSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  referralLevels: {
+    level1: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    level2: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    level3: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+  },
+  purchasedPackages: {
+    skillBuilder: { type: Boolean, default: false },
+    careerBooster: { type: Boolean, default: false }
+  },
   registrationDate: {
     type: Date,
     default: Date.now
@@ -55,20 +64,58 @@ const UserSchema = new mongoose.Schema({
     enum: ['not_submitted', 'pending', 'approved', 'rejected'],
     default: 'not_submitted'
   },
+  enrolledCourses: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course'
+    }
+  ],
+  priceHistory: [
+    {
+      amount: Number,
+      courseType: { type: String, enum: ['skill', 'career'] },
+      purchasedDate: Date,
+      purchasedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // referred user
+    }
+  ],
+  courseHistory: [
+    {
+      serialNo: Number,
+      date: Date,
+      courseType: { type: String, enum: ['skill', 'career'] },
+      courses: [
+        {
+          courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course' },
+          courseTitle: String
+        }
+      ]
+    }
+  ],
   kycDetails: {
-    documentType: String,
-    addressProofDocument: String,
-    panCard: String,
-    panNumber: String,
-    bankName: String,
-    accountHolderName: String,
-    accountNumber: String,
-    ifscCode: String,
-    upiId: String,
-    bankDocument: String,
-    submissionDate: Date,
-    approvalDate: Date,
-    rejectionReason: String
+    whatsAppNumber: { type: String },
+
+    documentType: { type: String },
+    documentNumber: { type: String },
+    addressProofDocument: { type: String },
+    addressProofDocumentUniqueId: { type: String },
+
+    panNumber: { type: String },
+    panCard: { type: String },
+    panCardUniqueId: { type: String },
+
+    bankName: { type: String },
+    accountHolderName: { type: String },
+    accountNumber: { type: String },
+    ifscCode: { type: String },
+    upiId: { type: String },
+
+    bankDocumentType: { type: String },
+    bankDocument: { type: String },
+    bankDocumentUniqueId: { type: String },
+
+    submissionDate: { type: Date },
+    approvalDate: { type: Date },
+    rejectionReason: { type: String },
   },
   purchasedCourses: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -87,7 +134,7 @@ const UserSchema = new mongoose.Schema({
 });
 
 // Pre-save middleware to hash password and generate referral code
-UserSchema.pre('save', async function(next) {
+UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -120,35 +167,35 @@ UserSchema.pre('save', async function(next) {
 
 
 // Method to check if password matches
-UserSchema.methods.matchPassword = async function(enteredPassword) {
+UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // Method to generate OTP
-UserSchema.methods.generateOTP = function() {
+UserSchema.methods.generateOTP = function () {
   // Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  
+
   // Set OTP expiration (15 minutes)
   const expiresAt = new Date();
   expiresAt.setMinutes(expiresAt.getMinutes() + 15);
-  
+
   // Save OTP data to user
   this.otpData = {
     otp,
     expiresAt
   };
-  
+
   return otp;
 };
 
 // Method to verify OTP
-UserSchema.methods.verifyOTP = function(enteredOTP) {
+UserSchema.methods.verifyOTP = function (enteredOTP) {
   // Check if OTP exists and is not expired
   if (!this.otpData || !this.otpData.otp || new Date() > this.otpData.expiresAt) {
     return false;
   }
-  
+
   // Check if OTP matches
   return this.otpData.otp === enteredOTP;
 };

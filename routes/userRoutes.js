@@ -1,18 +1,20 @@
 const express = require('express');
-const {
-  updateBankDetails,
-  updateProfile,
-  getBankDetails
-} = require('../controllers/userController');
+const { getUserDetails, getAllUserDetails, getReferralTree, getLeaderboardUsers, checkReferralLink, userKycDetails } = require('../controllers/userController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-// All routes are protected
-router.use(protect);
+// Protected route
+router.get('/me/goskilled97/getdetails/data0989/:id', protect, getUserDetails);
 
-router.put('/bank-details', updateBankDetails);
-router.put('/profile', updateProfile);
-router.get('/bank-details', getBankDetails);
+router.get('/allUsers', getAllUserDetails);
+
+router.get('/kyc/:id', userKycDetails);
+
+router.get('/referrals/:userId', getReferralTree);
+
+router.get('/leaderboard', getLeaderboardUsers)
+
+router.get('/check-referrals/:code/:id', checkReferralLink)
 
 module.exports = router;
